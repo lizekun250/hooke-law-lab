@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#07111f">
+  <meta name="description" content="通过观察刻度尺、组合砝码、记录数据和拟合图线，测量弹簧的劲度系数。">
+  <title>胡克定律模拟实验室</title>
+  <style>
+:root {
+  color-scheme: dark;
+  --bg: #07111f;
+  --surface: #0e2033;
+  --surface-raised: #132a40;
+  --surface-soft: #10253a;
+  --line: #294760;
+  --line-bright: #3c6682;
+  --ink: #ecf7ff;
+  --muted: #a0b9c9;
+  --blue: #42adf5;
+  --blue-strong: #248edb;
+  --cyan: #5de2df;
+  --success: #63d6aa;
+  --danger: #ff858a;
+  --warning: #ffd18a;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  min-width: 320px;
+  margin: 0;
+  background:
+    radial-gradient(circle at 50% -10%, #143c5d 0, transparent 36rem),
+    linear-gradient(180deg, #081728 0, var(--bg) 32rem);
+}
+button, input { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .45; }
+button:focus-visible, input:focus-visible {
+  outline: 3px solid var(--cyan);
+  outline-offset: 2px;
+}
+[hidden] { display: none !important; }
+
+.site-header {
+  color: var(--ink);
+  background: #081625;
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 8px 30px #030b16a6;
+}
+.header-inner {
+  max-width: 1120px;
+  margin: auto;
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.brand-mark {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--cyan);
+  border-radius: 12px;
+  color: var(--cyan);
+  background: #123047;
+  box-shadow: inset 0 0 16px #34d7e51e, 0 0 16px #38c5e822;
+  font: italic 30px Georgia, serif;
+}
+.eyebrow {
+  margin: 0 0 5px;
+  color: var(--cyan);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .13em;
+}
+.site-header .eyebrow { color: #82cce5; }
+.site-header h1 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.15;
+  font-weight: 750;
+  letter-spacing: .02em;
+}
+.text-button {
+  margin-left: auto;
+  padding: 9px 12px;
+  border: 1px solid var(--line-bright);
+  border-radius: 9px;
+  color: #c7e5f4;
+  background: #11273a;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.text-button:hover { background: #1a3d59; }
+
+.page-shell { max-width: 1120px; margin: auto; padding: 25px 22px 52px; }
+.intro-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.intro-row p { margin: 0; }
+.local-tag, .unit-chip {
+  padding: 6px 10px;
+  border: 1px solid #31607a;
+  border-radius: 30px;
+  color: #a3e8ef;
+  background: #123349;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 22px; }
+.steps span {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 1px solid #23394f;
+  border-radius: 10px;
+  color: #87a1b5;
+  background: #102033;
+  font-size: 13px;
+  font-weight: 700;
+}
+.steps b { font-size: 11px; letter-spacing: .05em; }
+.steps span.active {
+  color: #d8f6ff;
+  background: #173f5c;
+  border-color: var(--blue);
+  box-shadow: inset 0 0 18px #2d9be72b;
+}
+.steps span.done { color: #8ce2d8; background: #10313e; border-color: #2c7c85; }
+
+.lab-grid { display: grid; grid-template-columns: minmax(350px, 430px) minmax(0, 1fr); gap: 18px; align-items: start; }
+.workspace-column { display: grid; min-width: 0; gap: 18px; }
+.card {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  color: var(--ink);
+  background: linear-gradient(150deg, #10263b 0, var(--surface) 60%);
+  box-shadow: 0 10px 30px #01091370, inset 0 1px #ffffff0a;
+}
+.apparatus-panel { padding: 20px; overflow: hidden; }
+.task-card, .data-card, .result-card { padding: 24px; }
+.section-heading { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
+.section-heading h2 { margin: 0; font-size: 20px; line-height: 1.25; }
+.state-pill {
+  padding: 6px 10px;
+  border: 1px solid #365c75;
+  border-radius: 30px;
+  color: #b5d8ea;
+  background: #19354b;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.state-pill.complete { color: var(--success); border-color: #286f61; background: #103b37; }
+.apparatus-hint, .helper, .data-note { color: var(--muted); font-size: 13px; line-height: 1.65; }
+.apparatus-hint { margin: 10px 0 8px; }
+.apparatus-scroll {
+  max-height: 640px;
+  display: flex;
+  justify-content: center;
+  overflow: auto;
+  border: 1px solid #365672;
+  border-radius: 12px;
+  background: #091a2c;
+  scrollbar-color: #477797 #091a2c;
+}
+.apparatus-scroll svg { width: 100%; max-width: 360px; height: auto; flex: none; }
+.apparatus-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px; font-size: 13px; font-weight: 700; }
+.apparatus-footer #loadLabel { color: #c7e7f8; }
+.zoom-panel {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #386783;
+  border-radius: 12px;
+  background: #10273c;
+}
+.zoom-heading { display: flex; justify-content: space-between; gap: 8px; align-items: center; font-size: 13px; }
+.zoom-heading span { color: var(--muted); font-size: 11px; }
+.zoom-panel svg { display: block; width: 100%; height: auto; margin-top: 9px; border: 1px solid #38617b; border-radius: 8px; background: #091a2c; }
+.zoom-panel p { margin: 8px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+
+.btn {
+  min-height: 44px;
+  padding: 11px 15px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.btn.primary { color: #041625; background: linear-gradient(135deg, #72d8ff, var(--blue)); box-shadow: 0 3px 14px #1e9cea3b; }
+.btn.primary:not(:disabled):hover { background: #8ae0ff; }
+.btn.dark { color: #eaf8ff; background: linear-gradient(135deg, #2675b4, #195a98); border-color: #4e9bce; }
+.btn.dark:not(:disabled):hover { background: #3384c4; }
+.btn.secondary { color: #a5e9f5; background: #163c54; border-color: #35728d; }
+.btn.secondary:not(:disabled):hover { background: #20536e; }
+.btn.ghost { color: var(--ink); background: #17334a; border-color: var(--line-bright); }
+.btn.danger { color: #fff; background: #a64155; }
+.btn.full { display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; margin-top: 8px; }
+.task-card .helper { margin: 12px 0 20px; }
+label { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px; font-size: 13px; font-weight: 800; }
+label span { color: var(--muted); font-weight: 600; }
+.input-row { display: flex; gap: 9px; }
+.input-row input {
+  min-width: 0;
+  min-height: 47px;
+  flex: 1;
+  padding: 11px 13px;
+  appearance: textfield;
+  border: 1.5px solid #49708a;
+  border-radius: 10px;
+  color: var(--ink);
+  background: #0a1b2c;
+  font-size: 16px;
+}
+.input-row input::placeholder { color: #8da9bb; opacity: 1; }
+.input-row input::-webkit-outer-spin-button, .input-row input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.field-feedback { min-height: 21px; margin: 8px 0 10px; color: var(--muted); font-size: 12px; font-weight: 700; }
+.field-feedback.good { color: var(--success); }
+.field-feedback.bad { color: var(--danger); }
+
+.weight-stock { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 14px 0; }
+.weight-button {
+  min-width: 0;
+  min-height: 70px;
+  padding: 10px 5px;
+  border: 1.5px solid #376d8a;
+  border-radius: 10px;
+  color: #b6eaff;
+  background: linear-gradient(160deg, #173e59, #12334d);
+  text-align: center;
+  font-weight: 800;
+}
+.weight-button:not(:disabled):hover { border-color: var(--cyan); background: #1a506b; }
+.weight-button strong { display: block; font-size: 17px; }
+.weight-button small { color: #95bece; font-size: 11px; font-weight: 600; }
+.load-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 10px;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #0a1d2f;
+}
+.load-summary > div:first-child { min-width: 0; }
+.load-summary > div:first-child > span { color: var(--muted); font-size: 12px; font-weight: 700; }
+.hung-weights { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+.hung-weights button { min-height: 32px; padding: 6px 9px; border: 1px solid #517a98; border-radius: 30px; color: #c9eafa; background: #193d59; font-size: 11px; font-weight: 800; }
+.hung-weights em { color: var(--muted); font-size: 12px; font-style: normal; }
+.load-values { display: grid; flex: none; gap: 2px; text-align: right; white-space: nowrap; }
+.load-values strong { font-size: 19px; }
+.load-values span { color: var(--cyan); font-size: 12px; }
+.reading-block { margin-top: 20px; }
+.original-note { margin-top: 18px; padding-top: 15px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+.original-note strong { color: var(--ink); }
+
+.record-list { display: grid; gap: 8px; margin: 16px 0; }
+.record-row {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #0c2133;
+}
+.record-row.active { border-color: var(--cyan); background: #123a4c; }
+.record-index { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 50%; color: #a8e5ff; background: #204c67; font-size: 11px; font-weight: 800; }
+.record-info { min-width: 0; padding: 0; border: 0; color: var(--ink); background: none; text-align: left; }
+.record-info strong { display: block; font-size: 13px; }
+.record-info small { display: block; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.record-delete { padding: 8px; border: 0; color: var(--danger); background: none; font-size: 12px; font-weight: 700; }
+.data-note { margin: 7px 0 13px; }
+.chart-wrap { position: relative; overflow: hidden; border: 1px solid #365873; border-radius: 12px; background: #0c2034; }
+.chart-wrap svg { display: block; width: 100%; height: auto; touch-action: manipulation; }
+.chart-empty { position: absolute; inset: 0; display: grid; place-items: center; padding: 30px; color: var(--muted); background: #0c2034; text-align: center; font-size: 13px; line-height: 1.6; }
+.fit-hint { min-height: 18px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.selected-points { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+.selected-points div { padding: 11px; border: 1px solid #31536d; border-radius: 10px; background: #0c2236; font-size: 12px; font-weight: 800; }
+.formula { margin: 0 0 20px; padding: 10px 12px; border-left: 3px solid var(--cyan); color: #d9f7ff; background: #123348; font-size: 14px; font-weight: 800; }
+.formula span { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; font-weight: 500; line-height: 1.5; }
+.text-link { padding: 10px 0 0; border: 0; color: #85d8f2; background: none; font-size: 12px; font-weight: 700; }
+.result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 18px 0; }
+.result-metric { padding: 13px; border: 1px solid #31516a; border-radius: 10px; background: #10283d; }
+.result-metric span { display: block; margin-bottom: 6px; color: var(--muted); font-size: 11px; font-weight: 700; }
+.result-metric strong { font-size: 18px; }
+.result-metric small { display: block; margin-top: 5px; color: var(--muted); font-size: 10px; }
+.evaluation { margin: 15px 0; padding: 16px; border: 1px solid #2e706e; border-radius: 12px; color: #c7f1e9; background: #10383e; font-size: 13px; line-height: 1.6; }
+.evaluation strong { display: block; margin-bottom: 4px; }
+.evaluation p { margin: 0; }
+.result-explain { color: var(--muted); font-size: 11px; line-height: 1.55; }
+.toast { margin-bottom: 15px; padding: 12px 14px; border: 1px solid #2c8073; border-radius: 10px; color: #baf3de; background: #103b3d; font-size: 13px; font-weight: 700; }
+.toast.bad { border-color: #a74f61; color: #ffd2d5; background: #452737; }
+.restart-confirm { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 15px; padding: 13px; border: 1px solid #8b7050; border-radius: 12px; color: var(--warning); background: #352b25; font-size: 13px; font-weight: 700; }
+.restart-confirm > div { display: flex; gap: 6px; }
+footer { padding: 18px 20px 35px; color: #819eb2; text-align: center; font-size: 11px; }
+
+@media (max-width: 820px) {
+  .lab-grid { grid-template-columns: 1fr; }
+  .apparatus-panel { width: 100%; max-width: 560px; margin: auto; }
+  .workspace-column { width: 100%; }
+  .apparatus-scroll { max-height: 510px; }
+  .page-shell { padding: 18px 14px 36px; }
+}
+@media (max-width: 500px) {
+  .header-inner { padding: 14px; }
+  .site-header h1 { font-size: 17px; }
+  .brand-mark { width: 37px; height: 37px; font-size: 25px; }
+  .text-button { padding: 8px; font-size: 11px; }
+  .page-shell { padding: 15px 10px 30px; }
+  .intro-row { font-size: 12px; }
+  .local-tag { display: none; }
+  .steps { gap: 4px; }
+  .steps span { display: block; padding: 7px 4px; text-align: center; font-size: 10px; }
+  .steps b { display: block; margin-bottom: 2px; font-size: 10px; }
+  .apparatus-panel, .task-card, .data-card, .result-card { padding: 15px; }
+  .section-heading h2 { font-size: 18px; }
+  .apparatus-scroll { max-height: 440px; }
+  .input-row { gap: 6px; }
+  .input-row .btn { min-width: 92px; padding: 10px; }
+  .restart-confirm { display: block; }
+  .restart-confirm > div { justify-content: flex-end; margin-top: 9px; }
+  .record-row { grid-template-columns: 29px minmax(0, 1fr) auto; gap: 4px; padding: 9px; }
+  .record-info strong { font-size: 12px; }
+  .record-info small { font-size: 10px; }
+  .record-delete { padding: 5px; }
+  .result-grid { gap: 6px; }
+  .result-metric { padding: 10px; }
+  .result-metric strong { font-size: 16px; }
+}
+@media (max-width: 350px) {
+  .chart-wrap { overflow-x: auto; }
+  .chart-wrap svg { min-width: 330px; }
+  .chart-empty { min-width: 330px; }
+}
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand-mark" aria-hidden="true">k</div>
+      <div><p class="eyebrow">高中物理 · 数字实验</p><h1>胡克定律模拟实验室</h1></div>
+      <button id="restartButton" class="text-button" type="button">重新开始</button>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <div class="intro-row"><p>观察弹簧长度，记录拉力与伸长量，再用图线求出劲度系数。</p><span class="local-tag">数据保存在本机</span></div>
+    <nav class="steps" aria-label="实验步骤">
+      <span data-step="original"><b>01</b> 测原长</span><span data-step="measure"><b>02</b> 测长度</span><span data-step="analysis"><b>03</b> 处理数据</span><span data-step="result"><b>04</b> 实验评价</span>
+    </nav>
+
+    <div id="restartConfirm" class="restart-confirm" hidden><span>重新开始会清空本轮记录并生成新的测量偏差。</span><div><button id="cancelRestart" class="btn ghost" type="button">取消</button><button id="confirmRestart" class="btn danger" type="button">确认重新开始</button></div></div>
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+    <div class="lab-grid">
+      <section class="apparatus-panel card" aria-labelledby="apparatusTitle">
+        <div class="section-heading"><div><p class="eyebrow">实验装置</p><h2 id="apparatusTitle">观察弹簧末端</h2></div><span class="unit-chip">刻度：cm</span></div>
+        <p class="apparatus-hint">刻度尺最小分度为 0.1 cm；读数请估读到 0.01 cm。</p>
+        <div class="apparatus-scroll"><svg id="apparatus" viewBox="0 0 360 650" role="img" aria-label="弹簧、刻度尺和砝码的实验装置"></svg></div>
+        <div class="apparatus-footer"><span id="loadLabel">当前砝码：0 g</span><button id="zoomButton" class="btn secondary" type="button" aria-expanded="false" aria-controls="zoomPanel">放大读数</button></div>
+        <div id="zoomPanel" class="zoom-panel" hidden><div class="zoom-heading"><strong>局部放大</strong><span>同一刻度，放大 4 倍</span></div><svg id="zoom" viewBox="0 0 360 190" role="img" aria-label="弹簧末端附近的放大刻度"></svg><p>虚线对准弹簧末端，观察其在相邻毫米刻度之间的位置。</p></div>
+      </section>
+
+      <div class="workspace-column">
+        <section id="originalStage" class="card task-card" aria-labelledby="originalTitle">
+          <div class="section-heading"><div><p class="eyebrow">步骤 01</p><h2 id="originalTitle">先测量弹簧原长</h2></div><span class="state-pill">未挂砝码</span></div>
+          <p class="helper">观察弹簧下端与刻度尺对齐的位置。可以打开局部放大窗，再输入你的估读值。</p>
+          <label for="originalInput">弹簧原长 L₀ <span>cm</span></label>
+          <div class="input-row"><input id="originalInput" type="number" inputmode="decimal" min="0" max="36" step="0.01" placeholder="观察后输入，两位小数" autocomplete="off"><button id="checkOriginal" class="btn primary" type="button">检查读数</button></div>
+          <p id="originalFeedback" class="field-feedback" aria-live="polite"></p>
+          <button id="confirmOriginal" class="btn dark full" type="button" disabled>确认原长，开始实验 <span aria-hidden="true">→</span></button>
+        </section>
+
+        <section id="measureStage" class="card task-card" aria-labelledby="measureTitle" hidden>
+          <div class="section-heading"><div><p class="eyebrow">步骤 02</p><h2 id="measureTitle">组合砝码并读数</h2></div><span id="recordCount" class="state-pill">已记录 0/5 组</span></div>
+          <p class="helper">点击添加砝码；点击“已挂砝码”中的任意一枚即可取下。每次调整后，重新观察并检查读数。</p>
+          <div id="weightStock" class="weight-stock" aria-label="可添加的砝码"></div>
+          <div class="load-summary"><div><span>已挂砝码</span><div id="hungWeights" class="hung-weights"></div></div><div class="load-values"><strong id="totalMass">0 g</strong><span id="forceValue">F = 0.00 N</span></div></div>
+          <div class="reading-block"><label for="lengthInput">弹簧总长度 L <span>cm</span></label><div class="input-row"><input id="lengthInput" type="number" inputmode="decimal" min="0" max="36" step="0.01" placeholder="保留两位小数" autocomplete="off"><button id="checkLength" class="btn primary" type="button">检查读数</button></div><p id="lengthFeedback" class="field-feedback" aria-live="polite"></p><button id="recordButton" class="btn dark full" type="button" disabled>记录这一组数据 <span aria-hidden="true">＋</span></button></div>
+          <div class="original-note">本轮记录的原长：<strong id="originalRecorded">—</strong> cm　<span>伸长量由你的读数相减得到</span></div>
+        </section>
+
+        <section id="dataStage" class="card data-card" aria-labelledby="dataTitle" hidden>
+          <div class="section-heading"><div><p class="eyebrow">实验记录</p><h2 id="dataTitle">拉力与伸长量</h2></div><span id="dataCount" class="state-pill">0/5 组</span></div>
+          <div id="recordList" class="record-list"></div>
+          <p class="data-note">F = mg；x测 = L测 − L₀测。点击记录可高亮图中对应的数据点。</p>
+          <div class="chart-wrap"><svg id="chart" viewBox="0 0 380 320" role="img" aria-label="拉力与伸长量的实验图像"></svg><div id="chartEmpty" class="chart-empty">记录至少 2 组不同伸长量的数据后，图线会在这里出现。</div></div>
+          <p id="fitHint" class="fit-hint"></p>
+          <button id="analysisButton" class="btn dark full" type="button" disabled>进入数据处理，选取两点 <span aria-hidden="true">→</span></button>
+        </section>
+
+        <section id="analysisStage" class="card task-card" aria-labelledby="analysisTitle" hidden>
+          <div class="section-heading"><div><p class="eyebrow">步骤 03</p><h2 id="analysisTitle">在拟合直线上选两点</h2></div><span class="state-pill">点击上方图线</span></div>
+          <p class="helper">在图中依次点击相距较远的两个位置。点会吸附到拟合直线上，可再次点击重新选择。</p>
+          <div id="selectedPoints" class="selected-points"><div>点 A：待选择</div><div>点 B：待选择</div></div>
+          <p class="formula">k = ΔF / Δx　<span>横轴为 cm，算出 N/cm 后再乘以 100，得到 N/m。</span></p>
+          <label for="answerInput">你算得的劲度系数 k <span>N/m</span></label>
+          <div class="input-row"><input id="answerInput" type="number" inputmode="decimal" min="0" step="any" placeholder="输入计算结果" autocomplete="off"><button id="submitAnswer" class="btn primary" type="button">提交结果</button></div>
+          <p id="answerFeedback" class="field-feedback" aria-live="polite"></p>
+          <button id="backMeasure" class="text-link" type="button">← 返回测量，调整或补充数据</button>
+        </section>
+
+        <section id="resultStage" class="card result-card" aria-labelledby="resultTitle" hidden>
+          <div class="section-heading"><div><p class="eyebrow">步骤 04</p><h2 id="resultTitle">实验评价</h2></div><span class="state-pill complete">已完成</span></div>
+          <div id="resultContent"></div>
+          <button id="reviewButton" class="btn secondary full" type="button">返回查看图像与数据</button>
+        </section>
+      </div>
+    </div>
+  </main>
+  <footer>胡克定律模拟实验室 · 所有计算与记录均在当前浏览器内完成</footer>
+<!-- 内联打包：config.js + model.js + app.js -->
+<script>
+(function(){
+'use strict';
+// 教师可在这里统一调整本实验的物理参数与交互规则。
+const CONFIG = Object.freeze({
+  springConstantNm: 19.0,
+  originalLengthCm: 8.0,
+  gravityNkg: 10.0,
+  maxMassG: 500,
+  weights: Object.freeze([{ g: 20, count: 5 }, { g: 50, count: 4 }, { g: 100, count: 2 }]),
+  maxRecords: 5,
+  readingToleranceCm: 0.02,
+  readingBiasCm: 0.025,
+  rulerMaxCm: 36,
+  minFitSpanCm: 0.10
+});
+
+const STORAGE_KEY = 'hooke-law-lab-v1';
+const round2 = n => Math.round((n + Number.EPSILON) * 100) / 100;
+const massG = weights => weights.reduce((sum, g) => sum + g, 0);
+const forceN = (grams, config = CONFIG) => grams / 1000 * config.gravityNkg;
+const trueLengthCm = (grams, config = CONFIG) => config.originalLengthCm + forceN(grams, config) / config.springConstantNm * 100;
+const measuredExtensionCm = (lengthCm, originalCm) => round2(lengthCm - originalCm);
+
+function randomBias(config = CONFIG, random = Math.random) {
+  return round2((random() * 2 - 1) * config.readingBiasCm);
+}
+
+function createRound(config = CONFIG, random = Math.random) {
+  const originalReferenceCm = round2(config.originalLengthCm + randomBias(config, random));
+  return {
+    version: 1, stage: 'original', originalReferenceCm, originalRecordedCm: null,
+    weights: [], referenceCm: originalReferenceCm, draft: '', checked: false,
+    records: [], nextId: 1, selection: [], answer: '', submittedNm: null,
+    zoomOpen: false, feedback: '', feedbackType: 'info', restartPending: false
+  };
+}
+
+function nextReference(grams, config = CONFIG, random = Math.random) {
+  return round2(trueLengthCm(grams, config) + randomBias(config, random));
+}
+
+function checkReading(input, referenceCm, config = CONFIG) {
+  const raw = String(input).trim();
+  if (!/^\d+\.\d{2}$/.test(raw)) return { ok: false, reason: '请输入保留两位小数的有效长度（cm）。' };
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value <= 0 || value > config.rulerMaxCm) return { ok: false, reason: '长度不在刻度尺范围内。' };
+  if (Math.abs(value - referenceCm) > config.readingToleranceCm + 1e-9) return { ok: false, reason: '读数不在合理范围内，请重新观察刻度尺。' };
+  return { ok: true, value: round2(value) };
+}
+
+function mayAdd(weights, g, config = CONFIG) {
+  const item = config.weights.find(item => item.g === g);
+  if (!item || weights.filter(w => w === g).length >= item.count) return { ok: false, reason: '该砝码库存已用完。' };
+  if (massG(weights) + g > config.maxMassG) return { ok: false, reason: `总质量不能超过 ${config.maxMassG} g。` };
+  return { ok: true };
+}
+
+function fitRecords(records, config = CONFIG) {
+  if (records.length < 2) return { ok: false, reason: '至少记录 2 组数据后才能拟合。' };
+  const points = records.map(r => ({ x: measuredExtensionCm(r.lengthCm, r.originalCm), y: r.forceN }));
+  if (points.some(p => !Number.isFinite(p.x) || !Number.isFinite(p.y))) return { ok: false, reason: '数据无效，无法拟合。' };
+  const xs = points.map(p => p.x);
+  const span = Math.max(...xs) - Math.min(...xs);
+  if (span < config.minFitSpanCm) return { ok: false, reason: '伸长量跨度太小，请更换砝码组合后补充数据。' };
+  const n = points.length;
+  const meanX = xs.reduce((a, b) => a + b, 0) / n;
+  const meanY = points.reduce((a, p) => a + p.y, 0) / n;
+  const den = points.reduce((a, p) => a + (p.x - meanX) ** 2, 0);
+  if (den < 1e-12) return { ok: false, reason: '各组伸长量相同，无法拟合。' };
+  const slopeNcm = points.reduce((a, p) => a + (p.x - meanX) * (p.y - meanY), 0) / den;
+  const interceptN = meanY - slopeNcm * meanX;
+  if (!Number.isFinite(slopeNcm) || slopeNcm <= 0 || !Number.isFinite(interceptN)) return { ok: false, reason: '拟合失败，请检查记录的数据。' };
+  return { ok: true, slopeNcm, interceptN, referenceNm: slopeNcm * 100, points, spanCm: span };
+}
+
+function resultFor(answerNm, fit, config = CONFIG) {
+  if (!fit.ok || !Number.isFinite(answerNm) || answerNm <= 0) return null;
+  return {
+    answerNm,
+    referenceNm: fit.referenceNm,
+    trueNm: config.springConstantNm,
+    calculationErrorPct: Math.abs(answerNm - fit.referenceNm) / fit.referenceNm * 100,
+    experimentErrorPct: Math.abs(fit.referenceNm - config.springConstantNm) / config.springConstantNm * 100
+  };
+}
+
+function restoreRound(raw, config = CONFIG) {
+  try {
+    const s = JSON.parse(raw);
+    if (!s || s.version !== 1 || !['original','measure','analysis','result'].includes(s.stage) ||
+      !Array.isArray(s.weights) || !Array.isArray(s.records) || s.records.length > config.maxRecords ||
+      !Number.isFinite(s.originalReferenceCm) || !Number.isFinite(s.referenceCm) ||
+      s.weights.some(g => !config.weights.some(item => item.g === g)) || massG(s.weights) > config.maxMassG ||
+      s.records.some(r => !Number.isFinite(r.lengthCm) || !Number.isFinite(r.originalCm) || !Number.isFinite(r.forceN))) return null;
+    // 未确认的原长输入只是一份草稿；刷新后重新观察，不能由页面代填。
+    return { ...createRound(config), ...s, draft: s.stage === 'original' ? '' : s.draft, checked: false, restartPending: false, feedback: '' };
+  } catch { return null; }
+}
+
+const $ = id => document.getElementById(id);
+const stored = (() => { try { return localStorage.getItem(STORAGE_KEY); } catch { return null; } })();
+let state = restoreRound(stored) || createRound();
+let highlightedId = null;
+let chartScale = null;
+const save = () => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch { /* Browsers with disabled storage still run the experiment. */ } };
+const cm = n => Number(n).toFixed(2);
+const nfmt = n => Number(n).toFixed(3);
+const pct = n => `${n.toFixed(1)}%`;
+const svgText = (x, y, text, attrs = '') => `<text x="${x}" y="${y}" ${attrs}>${text}</text>`;
+const V = Object.freeze({
+  apparatus: '#091a2c', grid: '#12314a', ruler: '#17334b', rulerLine: '#547f99',
+  tick: '#89aec4', major: '#e2f5ff', spring: '#65c9ff', marker: '#57e4dc',
+  weight: '#287dc8', weightEdge: '#76cfff', text: '#d9f1fc', muted: '#95b5c8',
+  chart: '#0c2034', chartGrid: '#25445e', axis: '#aac8d8', point: '#49b8ff',
+  fit: '#5ee3dc', selected: '#ffcf73'
+});
+
+function message(text, type = 'info') {
+  state.feedback = text; state.feedbackType = type;
+  $('toast').textContent = text; $('toast').className = `toast ${type === 'bad' ? 'bad' : ''}`; $('toast').hidden = !text;
+  save();
+}
+function clearMessage() { state.feedback = ''; $('toast').hidden = true; save(); }
+function field(id, text, good = false) { const el = $(id); el.textContent = text; el.className = `field-feedback ${text ? good ? 'good' : 'bad' : ''}`; }
+function resetCheck() { state.checked = false; state.draft = ''; $('lengthInput').value = ''; field('lengthFeedback', ''); $('recordButton').disabled = true; }
+function currentMass() { return massG(state.weights); }
+function setReferenceForMass() { const grams = currentMass(); state.referenceCm = grams ? nextReference(grams) : state.originalReferenceCm; resetCheck(); save(); render(); }
+
+const rulerY = lengthCm => 70 + 15 * lengthCm;
+const zoomY = (lengthCm, centerCm) => 95 + 4 * (rulerY(lengthCm) - rulerY(centerCm));
+function rulerTicks(mapY, minCm, maxCm, zoomed = false) {
+  const parts = [];
+  const start = Math.max(0, Math.ceil(minCm * 10));
+  const end = Math.min(CONFIG.rulerMaxCm * 10, Math.floor(maxCm * 10));
+  for (let i = start; i <= end; i++) {
+    const major = i % 10 === 0, half = i % 5 === 0;
+    const y = mapY(i / 10);
+    parts.push(`<line x1="92" y1="${y}" x2="${major ? 124 : half ? 113 : 106}" y2="${y}" stroke="${major ? V.major : V.tick}" stroke-width="${major ? 2 : 1.25}"/>`);
+    if (major) parts.push(svgText(78, y + 4, String(i / 10), `text-anchor="end" fill="${V.major}" font-size="12" font-weight="700"`));
+  }
+  if (zoomed) parts.push(svgText(18, 178, '1 小格 = 0.1 cm', `fill="${V.muted}" font-size="10"`));
+  return parts.join('');
+}
+function springPath(endY, startY = 76) {
+  const bottom = Math.max(startY + 15, endY - 8);
+  let d = `M 206 ${startY} L 206 ${startY + 6}`;
+  const coilTop = startY + 6, coilBottom = bottom - 5;
+  for (let i = 0; i < 24; i++) {
+    const y = coilTop + (coilBottom - coilTop) * (i + 1) / 24;
+    d += ` L ${i % 2 ? 191 : 221} ${y}`;
+  }
+  return d + ` L 206 ${bottom} L 206 ${endY}`;
+}
+function renderApparatus() {
+  const endY = rulerY(state.referenceCm), grams = currentMass();
+  const ticks = rulerTicks(rulerY, 0, CONFIG.rulerMaxCm);
+  const weightShape = grams ? `<path d="M206 ${endY + 2} v14 q0 8 8 8" fill="none" stroke="${V.weightEdge}" stroke-width="2.5"/><rect x="169" y="${endY + 26}" width="74" height="31" rx="5" fill="${V.weight}" stroke="${V.weightEdge}" stroke-width="2"/><rect x="175" y="${endY + 20}" width="62" height="7" rx="3" fill="${V.weightEdge}"/>${svgText(206,endY+47,`${grams} g`,'text-anchor="middle" fill="#f4fbff" font-size="13" font-weight="800"')}` : `<path d="M206 ${endY + 2} v11 q0 10 9 7" fill="none" stroke="${V.weightEdge}" stroke-width="2.5"/>`;
+  const grid = Array.from({length: 8}, (_, i) => `<line x1="${30+i*44}" y1="0" x2="${30+i*44}" y2="650" stroke="${V.grid}" stroke-opacity=".45"/>`).join('');
+  $('apparatus').innerHTML = `<rect width="360" height="650" fill="${V.apparatus}"/>${grid}<rect x="24" y="38" width="9" height="580" rx="3" fill="#3e6683"/><rect x="20" y="613" width="76" height="10" rx="4" fill="#507b9b"/><rect x="27" y="42" width="181" height="8" rx="4" fill="#507b9b"/><circle cx="206" cy="72" r="7" fill="${V.spring}"/><rect x="32" y="60" width="102" height="553" rx="5" fill="${V.ruler}" stroke="${V.rulerLine}" stroke-width="1.5"/><line x1="92" y1="70" x2="92" y2="610" stroke="${V.rulerLine}" stroke-width="1.2"/>${ticks}<path d="${springPath(endY)}" fill="none" stroke="${V.spring}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><line x1="93" y1="${endY}" x2="238" y2="${endY}" stroke="${V.marker}" stroke-width="2" stroke-dasharray="5 4"/><circle cx="206" cy="${endY}" r="5" fill="${V.marker}" stroke="${V.apparatus}" stroke-width="1.5"/>${weightShape}${svgText(244, Math.min(endY-8,603), '弹簧末端', `fill="${V.marker}" font-size="11" font-weight="700"`)}${svgText(267, 80, '固定支架', `fill="${V.muted}" font-size="11"`)}`;
+  $('apparatus').setAttribute('aria-label', `弹簧末端与左侧刻度尺水平对齐，请自行观察读数。当前砝码总质量 ${grams} 克。`);
+  $('loadLabel').textContent = `当前砝码：${grams} g`;
+  const viewport = document.querySelector('.apparatus-scroll');
+  viewport.scrollTop = Math.max(0, endY * viewport.clientWidth / 360 - viewport.clientHeight * .52);
+
+  if (state.zoomOpen) {
+    const center = state.referenceCm, zy = len => zoomY(len, center);
+    $('zoom').innerHTML = `<rect width="360" height="190" fill="${V.apparatus}"/><rect x="36" y="0" width="99" height="190" fill="${V.ruler}" stroke="${V.rulerLine}"/><line x1="92" y1="0" x2="92" y2="190" stroke="${V.rulerLine}"/>${rulerTicks(zy, center-1.6, center+1.6, true)}<path d="M206 0 C198 8 214 16 206 24 S214 40 206 48 S198 64 206 72 L206 95" fill="none" stroke="${V.spring}" stroke-width="3.5"/><line x1="92" y1="95" x2="238" y2="95" stroke="${V.marker}" stroke-width="2.5" stroke-dasharray="5 4"/><circle cx="206" cy="95" r="5.5" fill="${V.marker}"/>${svgText(248,91,'末端',`fill="${V.marker}" font-size="12" font-weight="700"`)}`;
+  }
+}
+
+function renderWeights() {
+  const grams = currentMass();
+  $('totalMass').textContent = `${grams} g`;
+  $('forceValue').textContent = `F = ${forceN(grams).toFixed(2)} N`;
+  $('weightStock').innerHTML = CONFIG.weights.map(item => {
+    const remaining = item.count - state.weights.filter(g => g === item.g).length;
+    const can = mayAdd(state.weights, item.g).ok && state.records.length < CONFIG.maxRecords;
+    return `<button type="button" class="weight-button" data-add="${item.g}" ${can ? '' : 'disabled'}><strong>＋ ${item.g} g</strong><small>剩余 ${remaining} 枚</small></button>`;
+  }).join('');
+  $('hungWeights').innerHTML = state.weights.length ? state.weights.map((g, i) => `<button type="button" data-remove="${i}" aria-label="取下 ${g} 克砝码">${g} g ×</button>`).join('') : '<em>尚未悬挂</em>';
+  $('recordCount').textContent = `已记录 ${state.records.length}/${CONFIG.maxRecords} 组`;
+  $('originalRecorded').textContent = state.originalRecordedCm == null ? '—' : cm(state.originalRecordedCm);
+  $('recordButton').disabled = !state.checked || !grams || state.records.length >= CONFIG.maxRecords;
+}
+
+function renderRecords() {
+  const count = state.records.length;
+  $('dataCount').textContent = `${count}/${CONFIG.maxRecords} 组`;
+  $('recordList').innerHTML = count ? state.records.map((r, i) => `<div class="record-row ${highlightedId === r.id ? 'active' : ''}"><span class="record-index">${i + 1}</span><button type="button" class="record-info" data-highlight="${r.id}"><strong>${r.massG} g　·　${r.forceN.toFixed(2)} N</strong><small>L = ${cm(r.lengthCm)} cm　x = ${cm(measuredExtensionCm(r.lengthCm, r.originalCm))} cm</small></button><button type="button" class="record-delete" data-delete="${r.id}" aria-label="删除第 ${i+1} 组记录">删除</button></div>`).join('') : '<p class="helper">还没有有效数据。添加砝码并检查读数后记录。</p>';
+  const fit = fitRecords(state.records);
+  $('fitHint').textContent = fit.ok ? '圆点来自已记录的读数；直线按这些数据做普通线性拟合，未强制过原点。' : fit.reason;
+  $('analysisButton').disabled = !fit.ok;
+  drawChart(fit);
+  return fit;
+}
+
+function drawChart(fit) {
+  const svg = $('chart');
+  if (!fit.ok) { svg.innerHTML = ''; $('chartEmpty').hidden = false; chartScale = null; return; }
+  $('chartEmpty').hidden = true;
+  const xs = fit.points.map(p => p.x), ys = fit.points.map(p => p.y);
+  const maxX = Math.max(...xs), maxY = Math.max(...ys);
+  const xMax = Math.max(1, Math.ceil(maxX * 1.13 * 2) / 2);
+  const yMax = Math.max(.5, Math.ceil(maxY * 1.15 * 2) / 2);
+  const left = 48, right = 355, top = 28, bottom = 265;
+  const px = x => left + x / xMax * (right-left);
+  const py = y => bottom - y / yMax * (bottom-top);
+  chartScale = { xMax, yMax, left, right, top, bottom, px, py, fit, minLineX: Math.min(...xs), maxLineX: maxX };
+  const grid = [];
+  for (let i = 0; i <= 4; i++) {
+    const x = xMax * i/4, y = yMax * i/4;
+    grid.push(`<line x1="${px(x)}" y1="${top}" x2="${px(x)}" y2="${bottom}" stroke="${V.chartGrid}"/><line x1="${left}" y1="${py(y)}" x2="${right}" y2="${py(y)}" stroke="${V.chartGrid}"/>${svgText(px(x),bottom+18,x.toFixed(xMax<10?1:0),`text-anchor="middle" fill="${V.axis}" font-size="11"`)}${svgText(left-8,py(y)+3,y.toFixed(1),`text-anchor="end" fill="${V.axis}" font-size="11"`)}`);
+  }
+  const lineY = x => fit.interceptN + fit.slopeNcm * x;
+  const points = state.records.map((r, i) => {
+    const p = fit.points[i], active = highlightedId === r.id;
+    return `<circle cx="${px(p.x)}" cy="${py(p.y)}" r="${active?7:5.5}" fill="${active?V.selected:V.point}" stroke="${V.chart}" stroke-width="2"/>${active?svgText(px(p.x)+8,py(p.y)-8,`第${i+1}组`,`fill="${V.selected}" font-size="10" font-weight="700"`):''}`;
+  }).join('');
+  const picks = state.selection.map((p, i) => `<circle cx="${px(p.x)}" cy="${py(p.y)}" r="7" fill="${V.selected}" stroke="${V.chart}" stroke-width="2"/>${svgText(px(p.x)+9,py(p.y)-9,i?'B':'A',`fill="${V.selected}" font-size="12" font-weight="800"`)}`).join('');
+  svg.innerHTML = `<rect width="380" height="320" fill="${V.chart}"/>${grid.join('')}<line x1="${left}" y1="${bottom}" x2="${right}" y2="${bottom}" stroke="${V.axis}" stroke-width="1.5"/><line x1="${left}" y1="${top}" x2="${left}" y2="${bottom}" stroke="${V.axis}" stroke-width="1.5"/>${svgText(12,18,'F / N',`fill="${V.text}" font-size="12" font-weight="700"`)}${svgText(355,303,'x / cm',`text-anchor="end" fill="${V.text}" font-size="12" font-weight="700"`)}<line x1="${px(chartScale.minLineX)}" y1="${py(lineY(chartScale.minLineX))}" x2="${px(chartScale.maxLineX)}" y2="${py(lineY(chartScale.maxLineX))}" stroke="${V.fit}" stroke-width="3"/>${points}${picks}<rect x="${left}" y="${top}" width="${right-left}" height="${bottom-top}" fill="transparent" data-chart-pick="1" style="cursor:${state.stage==='analysis'?'crosshair':'default'}"/>`;
+}
+
+function renderSelection() {
+  const names = ['A','B'];
+  $('selectedPoints').innerHTML = names.map((name, i) => {
+    const p = state.selection[i];
+    return `<div>点 ${name}：${p ? `(${cm(p.x)} cm，${nfmt(p.y)} N)` : '待选择'}</div>`;
+  }).join('');
+}
+
+function renderResult(fit) {
+  if (state.submittedNm == null || !fit.ok) return;
+  const result = resultFor(state.submittedNm, fit);
+  if (!result) return;
+  const calculation = result.calculationErrorPct < 3 ? '斜率计算和单位换算基本正确。' : '请复核两点坐标、ΔF/Δx 以及 cm 到 m 的换算。';
+  const experiment = result.experimentErrorPct < 5 ? '拟合结果接近真实值。' : result.experimentErrorPct < 12 ? '测量结果有一定偏差，可尝试让数据覆盖更大的伸长量范围。' : '测量结果偏差较大。建议重看刻度估读、原长读数，并增加分布更开的砝码组合。';
+  $('resultContent').innerHTML = `<div class="result-grid"><div class="result-metric"><span>你提交的 k</span><strong>${result.answerNm.toFixed(2)} N/m</strong></div><div class="result-metric"><span>拟合斜率参考值</span><strong>${result.referenceNm.toFixed(2)} N/m</strong><small>由你的有效记录计算</small></div><div class="result-metric"><span>弹簧真实 k</span><strong>${result.trueNm.toFixed(2)} N/m</strong></div><div class="result-metric"><span>计算误差</span><strong>${pct(result.calculationErrorPct)}</strong><small>提交值与拟合斜率比较</small></div><div class="result-metric"><span>实验误差</span><strong>${pct(result.experimentErrorPct)}</strong><small>拟合斜率与真实值比较</small></div></div><div class="evaluation"><strong>实验反馈</strong><p>${calculation} ${experiment}</p></div><p class="result-explain">计算误差反映选点、计算与换算；实验误差反映测量数据拟合值与真实值之间的差异。读数判定容差只是网页的交互标准。</p>`;
+}
+
+function render() {
+  const stages = ['original','measure','analysis','result'];
+  stages.forEach((step, i) => {
+    const el = document.querySelector(`[data-step="${step}"]`);
+    el.className = stages.indexOf(state.stage) === i ? 'active' : stages.indexOf(state.stage) > i ? 'done' : '';
+  });
+  $('originalStage').hidden = state.stage !== 'original';
+  $('measureStage').hidden = state.stage !== 'measure';
+  $('dataStage').hidden = state.stage === 'original';
+  $('analysisStage').hidden = state.stage !== 'analysis';
+  $('resultStage').hidden = state.stage !== 'result';
+  $('restartConfirm').hidden = !state.restartPending;
+  $('zoomPanel').hidden = !state.zoomOpen;
+  $('zoomButton').textContent = state.zoomOpen ? '收起放大' : '放大读数';
+  $('zoomButton').setAttribute('aria-expanded', String(state.zoomOpen));
+  $('originalInput').value = state.stage === 'original' ? state.draft : (state.originalRecordedCm == null ? '' : cm(state.originalRecordedCm));
+  $('lengthInput').value = state.stage === 'measure' ? state.draft : '';
+  $('answerInput').value = state.answer;
+  $('confirmOriginal').disabled = !(state.stage === 'original' && state.checked);
+  renderApparatus(); renderWeights();
+  const fit = renderRecords(); renderSelection(); renderResult(fit);
+  if (state.feedback) message(state.feedback, state.feedbackType); else $('toast').hidden = true;
+}
+
+$('zoomButton').addEventListener('click', () => { state.zoomOpen = !state.zoomOpen; save(); render(); });
+$('restartButton').addEventListener('click', () => { state.restartPending = true; save(); render(); $('restartConfirm').scrollIntoView({ behavior:'smooth', block:'nearest' }); });
+$('cancelRestart').addEventListener('click', () => { state.restartPending = false; save(); render(); });
+$('confirmRestart').addEventListener('click', () => { state = createRound(); highlightedId = null; save(); render(); message('新一轮实验已开始。'); });
+
+$('originalInput').addEventListener('input', e => { state.draft = e.target.value; state.checked = false; $('confirmOriginal').disabled = true; field('originalFeedback',''); save(); });
+$('checkOriginal').addEventListener('click', () => {
+  const check = checkReading($('originalInput').value, state.originalReferenceCm);
+  state.checked = check.ok; save();
+  field('originalFeedback', check.ok ? '读数正确，可以确认原长。' : check.reason, check.ok);
+  $('confirmOriginal').disabled = !check.ok;
+});
+$('confirmOriginal').addEventListener('click', () => {
+  if (!state.checked) return;
+  const check = checkReading(state.draft, state.originalReferenceCm);
+  if (!check.ok) return;
+  state.originalRecordedCm = check.value; state.stage = 'measure'; resetCheck(); save(); render(); message('原长已确认。现在添加砝码，测量弹簧长度。');
+});
+
+$('weightStock').addEventListener('click', e => {
+  const button = e.target.closest('[data-add]'); if (!button || state.stage !== 'measure') return;
+  const g = Number(button.dataset.add), allowed = mayAdd(state.weights, g);
+  if (!allowed.ok) { message(allowed.reason,'bad'); return; }
+  state.weights.push(g); clearMessage(); setReferenceForMass();
+});
+$('hungWeights').addEventListener('click', e => {
+  const button = e.target.closest('[data-remove]'); if (!button || state.stage !== 'measure') return;
+  const i = Number(button.dataset.remove); if (!Number.isInteger(i) || i < 0 || i >= state.weights.length) return;
+  state.weights.splice(i,1); clearMessage(); setReferenceForMass();
+});
+$('lengthInput').addEventListener('input', e => { state.draft = e.target.value; state.checked = false; $('recordButton').disabled = true; field('lengthFeedback',''); save(); });
+$('checkLength').addEventListener('click', () => {
+  if (state.originalRecordedCm == null) { field('lengthFeedback','请先测量原长。'); return; }
+  if (!currentMass()) { field('lengthFeedback','请先挂上砝码。'); return; }
+  if (state.records.length >= CONFIG.maxRecords) { field('lengthFeedback','已记录 5 组，请进入数据处理。'); return; }
+  const check = checkReading($('lengthInput').value, state.referenceCm);
+  state.checked = check.ok; save();
+  field('lengthFeedback', check.ok ? '读数正确，可以记录这一组。' : check.reason, check.ok);
+  $('recordButton').disabled = !check.ok;
+});
+$('recordButton').addEventListener('click', () => {
+  if (state.stage !== 'measure' || !state.checked || !currentMass() || state.records.length >= CONFIG.maxRecords || state.originalRecordedCm == null) return;
+  const check = checkReading(state.draft, state.referenceCm);
+  if (!check.ok) { state.checked = false; render(); message(check.reason,'bad'); return; }
+  const grams = currentMass();
+  state.records.push({ id: state.nextId++, massG: grams, forceN: forceN(grams), lengthCm: check.value, originalCm: state.originalRecordedCm });
+  state.referenceCm = nextReference(grams);
+  resetCheck(); save(); render();
+  message(state.records.length >= CONFIG.maxRecords ? '已记录 5/5 组，请进入数据处理。' : `记录成功，已完成 ${state.records.length}/${CONFIG.maxRecords} 组。`);
+});
+
+$('recordList').addEventListener('click', e => {
+  const del = e.target.closest('[data-delete]');
+  if (del) {
+    const id = Number(del.dataset.delete); state.records = state.records.filter(r => r.id !== id);
+    if (highlightedId === id) highlightedId = null;
+    state.selection = []; state.submittedNm = null; state.answer = '';
+    if (state.stage !== 'original') state.stage = 'measure';
+    resetCheck(); save(); render(); message('该组记录已删除，可以补充新数据。'); return;
+  }
+  const hi = e.target.closest('[data-highlight]'); if (hi) { highlightedId = Number(hi.dataset.highlight); renderRecords(); }
+});
+$('analysisButton').addEventListener('click', () => {
+  if (!fitRecords(state.records).ok) return;
+  state.stage = 'analysis'; state.selection = []; state.answer = ''; state.submittedNm = null;
+  save(); render(); $('dataStage').scrollIntoView({ behavior:'smooth', block:'start' });
+});
+$('chart').addEventListener('click', e => {
+  if (state.stage !== 'analysis' || !chartScale || !e.target.closest('[data-chart-pick]')) return;
+  const svg = $('chart'), rect = svg.getBoundingClientRect();
+  const viewX = (e.clientX - rect.left) / rect.width * 380;
+  const s = chartScale;
+  const x = Math.max(s.minLineX, Math.min(s.maxLineX, (viewX - s.left) / (s.right-s.left) * s.xMax));
+  const y = s.fit.interceptN + s.fit.slopeNcm * x;
+  if (state.selection.length >= 2) state.selection = [];
+  state.selection.push({ x, y });
+  save(); drawChart(s.fit); renderSelection();
+  if (state.selection.length === 2 && Math.abs(state.selection[1].x-state.selection[0].x) < s.fit.spanCm * .25) field('answerFeedback','两点距离较近，建议重新选择相距更远的点。');
+  else field('answerFeedback','');
+});
+$('answerInput').addEventListener('input', e => { state.answer = e.target.value; save(); field('answerFeedback',''); });
+$('submitAnswer').addEventListener('click', () => {
+  const fit = fitRecords(state.records);
+  if (!fit.ok) { field('answerFeedback',fit.reason); return; }
+  if (state.selection.length !== 2) { field('answerFeedback','请先在拟合直线上选择两个点。'); return; }
+  if (Math.abs(state.selection[1].x - state.selection[0].x) < 0.01) { field('answerFeedback','两点过近，请重新选择。'); return; }
+  const raw = $('answerInput').value.trim(), value = Number(raw);
+  if (!raw || !Number.isFinite(value) || value <= 0 || value > 10000) { field('answerFeedback','请输入合理的正数，单位为 N/m。'); return; }
+  state.answer = raw; state.submittedNm = value; state.stage = 'result'; save(); render(); $('resultStage').scrollIntoView({ behavior:'smooth', block:'start' });
+});
+$('backMeasure').addEventListener('click', () => { state.stage = 'measure'; state.selection = []; save(); render(); $('measureStage').scrollIntoView({ behavior:'smooth', block:'start' }); });
+$('reviewButton').addEventListener('click', () => { state.stage = 'analysis'; save(); render(); $('dataStage').scrollIntoView({ behavior:'smooth', block:'start' }); });
+
+save(); render();
+})();
+</script>
+</body>
+</html>
